@@ -3,7 +3,7 @@
 
 oc login
 
-oc project poc-dev
+oc new-project poc-dev
 
 oc process openshift//jenkins-ephemeral | oc apply -f- -n poc-dev
 
