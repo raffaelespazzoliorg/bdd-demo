@@ -34,14 +34,18 @@ E2E tests are defined using CucumberJS, Protractor. The cucumber tests are store
 
 The feature specifications are at the root of the cucumber directory. Step definitions are in `cucumber/step_definitions`.
 
-The E2E tests require a selenium instance to be running. You can quickly spin up a chrome selenium instance with:
+To run the E2E tests on your local machine, follow these steps:
 
-```bash
-podman run -d -p 4444:4444 -v /dev/shm:/dev/shm selenium/standalone-chrome:4.0.0-beta-3-20210426
-```
-
-Once you have a selenium instance, you can run `npm run e2e` to execute the end-to-end tests.
-
+1. Start the REST Api on your local machine
+   1. Navigate to the project folder of the rest api
+   1. Run `./mvnw spring-boot:run`
+1. Start the Angular app, and have it listen for requests on your host ip address
+   - `npm run start -- --host 0.0.0.0`
+1. Start the selenium docker container
+   - `podman run --name selenium -d -p 4444:4444 -v /dev/shm:/dev/shm selenium/standalone-chrome:4.0.0-beta-3-20210426`
+1. Run your end-to-end tests, using your host ip address
+   - Linux: `` npm run e2e -- --dev-server-target="" --base-url http://`ip addr | grep 'state UP' -A2 | tail -n1 | awk '{print $2}' | cut -f1 -d'/'`:4200 ``
+   - Other: `npm run e2e -- --dev-server-target="" --base-url http://<YOUR_MACHINE_IP_ADDRESS>:4200`
 
 ## running oracle
 
