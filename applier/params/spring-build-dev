@@ -1,0 +1,9 @@
+APPLICATION_NAME=spring-petclinic-rest
+NAMESPACE=poc-dev
+SOURCE_REPOSITORY_URL=https://github.com/spring-petclinic/spring-petclinic-rest.git
+SOURCE_REPOSITORY_REF=
+APPLICATION_SOURCE_REPO=https://github.com/spring-petclinic/spring-petclinic-rest.git
+APPLICATION_REF=master
+APPLICATION_CONTEXT_DIR=
+BASE_APP_DOMAIN=apps.shared-na46.openshift.opentlc.com
+SA_NAMESPACE=poc-dev
