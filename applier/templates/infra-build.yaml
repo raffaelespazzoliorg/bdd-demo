@@ -39,29 +39,21 @@ objects:
                   stage("Checkout") {
                     sh "git clone https://github.com/miqbal-redhat/bbd-demo.git"   
                      dir('bbd-demo')
-                     {
-                      sh "ls -ltr"
-                     }
+                       {
+                        sh "ls -ltr"
+                       }
                     
                     }
                     
-                 //  stage("Deploy Seleninum") {
-                 //   sh "oc new-app simontim/selenium-openshift:latest -n poc-dev"
-                 //  }
-                   
-                   
-                  stage("Deploy Rest App") {
-                    sh "oc process -f applier/templates/spring-build.yaml --param-file=applier/params/spring-build-dev | oc apply -f- -n poc-dev"
-                   
-                   
-                   }
+                    stage("Deply Infrastructure") {
+                    parallel (
+                            'Selinium':  { sh "oc new-app simontim/selenium-openshift:latest -n poc-dev"},
+                            'Rest':  { sh "oc process -f applier/templates/spring-build.yaml --param-file=applier/params/spring-build-dev | oc apply -f- -n poc-dev"},
+                            'Angular': { sh "oc process -f applier/templates/nodejs-build.yaml --param-file=applier/params/nodejs-build-dev | oc apply -f- -n poc-dev"}
                     
-                  stage("Deploy Angular App") {
-                    sh "oc process -f applier/templates/nodejs-build.yaml --param-file=applier/params/nodejs-build-dev | oc apply -f- -n poc-dev"
-                   
-                   }
+                      )
                     
-                    
+                    }
                   
                 }    
       env:
