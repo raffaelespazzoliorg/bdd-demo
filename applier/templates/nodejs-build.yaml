@@ -1,0 +1,260 @@
+apiVersion: template.openshift.io/v1
+kind: Template
+labels:
+  template: generic-java-jenkins-pipeline
+metadata:
+  annotations:
+    description: Application template for NodeJS applications built using a Jenkins Pipeline
+    iconClass: angular-js
+    tags: spring,xpaas,jenkins-ci
+    version: 1.2.0
+  name: seleium-angular-js-jenkins-pipeline
+objects:
+- apiVersion: image.openshift.io/v1
+  kind: ImageStream
+  metadata:
+    labels:
+      application: ${APPLICATION_NAME}
+    name: ${APPLICATION_NAME}
+    namespace: ${NAMESPACE}
+- apiVersion: build.openshift.io/v1
+  kind: BuildConfig
+  metadata:
+    labels:
+      application: ${APPLICATION_NAME}
+    name: "${APPLICATION_NAME}-pipeline"
+    namespace: "${NAMESPACE}"
+  spec:
+    source:
+      type: Git
+      git:
+        uri: ${SOURCE_REPOSITORY_URL}
+        ref: ${SOURCE_REPOSITORY_REF}
+      contextDir: ${CONTEXT_DIR}
+    triggers:
+    - type: "GitHub"
+      github:
+        secret: ${GITHUB_WEBHOOK_SECRET}
+    - type: "ConfigChange"
+    strategy:
+      type: "JenkinsPipeline"
+      jenkinsPipelineStrategy:
+        jenkinsfile: |-
+                node {
+                  stage("Initialize") {
+                    project = env.PROJECT_NAME
+                  }
+                }
+                
+                node("nodejs") {
+                
+                  stage("Checkout") {
+                    sh "git clone https://github.com/spring-petclinic/spring-petclinic-angular.git"   
+                    
+                    }
+                    
+                  stage("Build and Deploy") {
+                                    
+                  
+                    dir('spring-petclinic-angular')
+                    {                      
+                      //sh "oc new-build --strategy docker --binary --docker-image node:14.16.1-alpine3.13 --name spring-petclinic-angular"
+                      
+                     // sh "oc start-build spring-petclinic-angular --from-dir=. --follow"
+                      
+                      sh "oc start-build spring-petclinic-angular  --follow"
+                      
+                      
+                     // sh "oc new-app spring-petclinic-angular -n poc-dev"
+                      
+                     // sh "oc expose service spring-petclinic-angular"
+                      
+                      
+                    }
+                    
+                  }
+                }
+                
+      env:
+        - name: "APPLICATION_SOURCE_REPO"
+          value: "${APPLICATION_SOURCE_REPO}"
+        - name: "CONTEXT_DIR"
+          value: "${APPLICATION_CONTEXT_DIR}"
+        - name: "BASE_APP_DOMAIN"
+          value: "${BASE_APP_DOMAIN}"
+        - name: "APPLICATION_REF"
+          value: "${APPLICATION_REF}"      
+- apiVersion: build.openshift.io/v1
+  kind: BuildConfig
+  metadata:
+    labels:
+      application: ${APPLICATION_NAME}
+    name: ${APPLICATION_NAME}
+    namespace: "${NAMESPACE}"
+  spec:
+    output:
+      to:
+        kind: ImageStreamTag
+        name: ${APPLICATION_NAME}:latest
+    source:
+      type: Git
+      git:
+        uri: 'https://github.com/raffaelespazzoliorg/spring-petclinic-angular.git'
+      contextDir: /
+    strategy:
+      type: Docker
+      dockerStrategy:
+        dockerfilePath: Dockerfile
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      description: The web server's http port.
+    labels:
+      app: ${APPLICATION_NAME}
+    name: ${APPLICATION_NAME}
+    namespace: ${NAMESPACE}
+  spec:
+    ports:
+    - port: 8080
+      targetPort: 8080
+    selector:
+      deploymentConfig: ${APPLICATION_NAME}
+- apiVersion: route.openshift.io/v1
+  kind: Route
+  metadata:
+    annotations:
+      description: Route for application's http service.
+    labels:
+      app: ${APPLICATION_NAME}
+    name: ${APPLICATION_NAME}
+    namespace: ${NAMESPACE}
+  spec:
+    host: ${HOSTNAME_HTTP}
+    to:
+      name: ${APPLICATION_NAME}
+- apiVersion: apps.openshift.io/v1
+  kind: DeploymentConfig
+  metadata:
+    labels:
+      app: ${APPLICATION_NAME}
+    name: ${APPLICATION_NAME}
+    namespace: ${NAMESPACE}
+  spec:
+    replicas: 1
+    selector:
+      deploymentConfig: ${APPLICATION_NAME}
+    strategy:
+      type: Recreate
+    template:
+      metadata:
+        labels:
+          app: ${APPLICATION_NAME}
+          deploymentConfig: ${APPLICATION_NAME}
+        name: ${APPLICATION_NAME}
+      spec:
+        containers:
+        - image: ${APPLICATION_NAME}
+          imagePullPolicy: Always
+          name: ${APPLICATION_NAME}
+          ports:
+          - containerPort: 8080
+            name: http
+            protocol: TCP
+        terminationGracePeriodSeconds: 60
+    triggers:
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - ${APPLICATION_NAME}
+        from:
+          kind: ImageStreamTag
+          name: ${APPLICATION_NAME}:latest
+      type: ImageChange
+    - type: ConfigChange
+- apiVersion: rbac.authorization.k8s.io/v1
+  kind: RoleBinding
+  metadata:
+    creationTimestamp: null
+    labels:
+      template: basic-nodejs
+    name: jenkins_edit
+    namespace: ${NAMESPACE}
+  groupNames: null
+  roleRef:
+    apiGroup: rbac.authorization.k8s.io
+    kind: ClusterRole
+    name: edit
+  subjects:
+  - kind: ServiceAccount
+    name: ${SA_NAME}
+    namespace: ${SA_NAMESPACE}
+  userNames:
+  - system:serviceaccount:${SA_NAMESPACE}:${SA_NAME}
+parameters:
+- description: The name for the application.
+  name: APPLICATION_NAME
+  required: true
+  value: todomvc
+- description: The namespace to deploy into
+  name: NAMESPACE
+  required: true
+- description: Git source URI for application
+  name: SOURCE_REPOSITORY_URL
+  required: true
+  value: https://github.com/spring-petclinic/spring-petclinic-angular.git
+- description: Git branch/tag reference
+  name: SOURCE_REPOSITORY_REF
+  value: "master"
+- description: Path within Git project to build; empty for root project directory.
+  name: CONTEXT_DIR
+  value: spring-petclinic-rest
+- description: Source code repo for demo app
+  name: APPLICATION_SOURCE_REPO
+  required: true
+  value: https://github.com/spring-petclinic/spring-petclinic-angular.git
+- description: Application context dir
+  name: APPLICATION_CONTEXT_DIR
+  required: false
+  value: '.'  
+- description: git branch where the app resides
+  name: APPLICATION_REF
+  required: false
+- description: Path within Git project pointing to the pipeline run script
+  name: PIPELINE_SCRIPT
+  value: applier/springjenkins/Jenkinsfile
+- description: GitHub trigger secret
+  from: '[a-zA-Z0-9]{8}'
+  generate: expression
+  name: GITHUB_WEBHOOK_SECRET
+  required: true
+- description: Generic build trigger secret
+  from: '[a-zA-Z0-9]{8}'
+  generate: expression
+  name: GENERIC_WEBHOOK_SECRET
+  required: true
+- description: Namespace in which the ImageStreams for Red Hat Middleware images are
+    installed. These ImageStreams are normally installed in the openshift namespace.
+    You should only need to modify this if you've installed the ImageStreams in a
+    different namespace/project.
+  name: IMAGE_STREAM_NAMESPACE
+  required: true
+  value: openshift
+- description: Image stream tag for the image you'd like to use to build the application
+  name: IMAGE_STREAM_TAG_NAME
+  required: true
+  value: nodejs:latest
+- description: the base domain that this app will have when accessed from outside OCP
+  name: BASE_APP_DOMAIN
+  required: true 
+- description: Name of a service account that can deploy to this project
+  name: SA_NAME
+  required: true
+  value: jenkins
+- description: Namespace of service account that can deploy to this project
+  name: SA_NAMESPACE
+  required: true
+- description: 'Custom hostname for http service route.  Leave blank for default hostname,
+    e.g.: <application-name>-<project>.<default-domain-suffix>'
+  name: HOSTNAME_HTTP
+  

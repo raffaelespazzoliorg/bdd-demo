@@ -1,0 +1,123 @@
+apiVersion: template.openshift.io/v1
+kind: Template
+labels:
+  template: generic-java-jenkins-pipeline
+metadata:
+  annotations:
+    description: Application template for maven applications built using a Jenkins Pipeline
+    iconClass: infra-build
+    tags: spring,xpaas,jenkins-ci
+    version: 1.2.0
+  name: jenkins-infra-build-pipeline
+objects:
+- apiVersion: build.openshift.io/v1
+  kind: BuildConfig
+  metadata:
+    labels:
+      application: ${APPLICATION_NAME}
+    name: "${APPLICATION_NAME}-pipeline"
+    namespace: "${NAMESPACE}"
+  spec:
+    source:
+      type: Git
+      git:
+        uri: ${SOURCE_REPOSITORY_URL}
+        ref: ${SOURCE_REPOSITORY_REF}
+      contextDir: ${CONTEXT_DIR}
+    triggers:
+    - type: "GitHub"
+      github:
+        secret: ${GITHUB_WEBHOOK_SECRET}
+    - type: "ConfigChange"
+    strategy:
+      type: "JenkinsPipeline"
+      jenkinsPipelineStrategy:
+        jenkinsfile: |-
+                
+                node("maven") {
+                
+                  stage("Checkout") {
+                    sh "git clone https://github.com/miqbal-redhat/bbd-demo.git"   
+                     dir('bbd-demo')
+                       {
+                        sh "ls -ltr"
+                       }
+                    
+                    }
+                    
+                    stage("Deply Infrastructure") {
+                    parallel (
+                            'Selinium':  { sh "oc new-app simontim/selenium-openshift:latest -n poc-dev"},
+                            'Rest':  { sh "oc process -f applier/templates/spring-build.yaml --param-file=applier/params/spring-build-dev | oc apply -f- -n poc-dev"},
+                            'Angular': { sh "oc process -f applier/templates/nodejs-build.yaml --param-file=applier/params/nodejs-build-dev | oc apply -f- -n poc-dev"}
+                    
+                      )
+                    
+                    }
+                  
+                }    
+      env:
+        - name: "APPLICATION_SOURCE_REPO"
+          value: "${APPLICATION_SOURCE_REPO}"
+        - name: "CONTEXT_DIR"
+          value: "${APPLICATION_CONTEXT_DIR}"
+        - name: "BASE_APP_DOMAIN"
+          value: "${BASE_APP_DOMAIN}"
+        - name: "APPLICATION_REF"
+          value: "${APPLICATION_REF}"      
+parameters:
+- description: The name for the application.
+  name: APPLICATION_NAME
+  required: true
+  value: poc-dev
+- description: The namespace to deploy into
+  name: NAMESPACE
+  required: true
+- description: Git source URI for application
+  name: SOURCE_REPOSITORY_URL
+  required: true
+  value: https://github.com/miqbal-redhat/bbd-demo.git
+- description: Git branch/tag reference
+  name: SOURCE_REPOSITORY_REF
+  value: "master"
+- description: Path within Git project to build; empty for root project directory.
+  name: CONTEXT_DIR
+  value: spring-petclinic-rest
+- description: Source code repo for demo app
+  name: APPLICATION_SOURCE_REPO
+  required: true
+  value: https://github.com/miqbal-redhat/bbd-demo.git
+- description: Application context dir
+  name: APPLICATION_CONTEXT_DIR
+  required: false
+  value: '.'  
+- description: git branch where the app resides
+  name: APPLICATION_REF
+  required: false
+- description: Path within Git project pointing to the pipeline run script
+  name: PIPELINE_SCRIPT
+  value: applier/templates/infra-buil.yaml
+- description: GitHub trigger secret
+  from: '[a-zA-Z0-9]{8}'
+  generate: expression
+  name: GITHUB_WEBHOOK_SECRET
+  required: true
+- description: Generic build trigger secret
+  from: '[a-zA-Z0-9]{8}'
+  generate: expression
+  name: GENERIC_WEBHOOK_SECRET
+  required: true
+- description: Namespace in which the ImageStreams for Red Hat Middleware images are
+    installed. These ImageStreams are normally installed in the openshift namespace.
+    You should only need to modify this if you've installed the ImageStreams in a
+    different namespace/project.
+  name: IMAGE_STREAM_NAMESPACE
+  required: true
+  value: openshift
+- description: Image stream tag for the image you'd like to use to build the application
+  name: IMAGE_STREAM_TAG_NAME
+  required: true
+  value: redhat-openjdk18-openshift:1.8
+- description: the base domain that this app will have when accessed from outside OCP
+  name: BASE_APP_DOMAIN
+  required: false 

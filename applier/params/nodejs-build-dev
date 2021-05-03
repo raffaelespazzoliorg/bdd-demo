@@ -1,0 +1,9 @@
+APPLICATION_NAME=spring-petclinic-angular
+NAMESPACE=poc-dev
+SOURCE_REPOSITORY_URL=https://github.com/raffaelespazzoliorg/spring-petclinic-angular
+SOURCE_REPOSITORY_REF=
+APPLICATION_SOURCE_REPO=https://github.com/raffaelespazzoliorg/spring-petclinic-angular
+APPLICATION_REF=
+APPLICATION_CONTEXT_DIR=
+BASE_APP_DOMAIN=apps.shared-na46.openshift.opentlc.com
+SA_NAMESPACE=poc-dev
