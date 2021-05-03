@@ -1,14 +1,19 @@
 # bdd-demo
 
+this is to be set at the beginning
+
+```shell
+export namespace=poc-dev
+```
+
 #deploy jenkins
 
+```shell
 oc login
-
-oc new-project poc-dev
-
-oc process openshift//jenkins-ephemeral | oc apply -f- -n poc-dev
-
-oc set env dc/jenkins JENKINS_JAVA_OVERRIDES=-Dhudson.model.DirectoryBrowserSupport.CSP='' INSTALL_PLUGINS=ansicolor:0.5.2 -n poc-dev
+oc new-project ${namespace}
+oc process openshift//jenkins-ephemeral | oc apply -f- -n ${namespace}
+oc set env dc/jenkins JENKINS_JAVA_OVERRIDES=-Dhudson.model.DirectoryBrowserSupport.CSP='' INSTALL_PLUGINS=ansicolor:0.5.2 -n ${namespace}
+```
 
 ## The Angular Application
 
@@ -44,3 +49,26 @@ To run the E2E tests on your local machine, follow these steps:
    - `podman run --name selenium -d -p 4444:4444 -v /dev/shm:/dev/shm selenium/standalone-chrome:4.0.0-beta-3-20210426`
 1. Run your end-to-end tests, using your host ip address
    - `` npm run e2e -- --dev-server-target="" --base-url http://`ip addr | grep 'state UP' -A2 | tail -n1 | awk '{print $2}' | cut -f1 -d'/'`:4200 ``
+
+## running oracle
+
+### build oracle image
+
+run only once
+
+```shell
+oc apply -f ./oracle/build.yaml -n ${namespace}
+```
+
+### deploy oracle
+
+```shell
+oc adm policy add-scc-to-user anyuid -z oracle -n ${namespace}
+oc apply -f ./oracle/statefulset.yaml -n ${namespace}
+```
+
+## deploying the rest application
+
+```shell
+oc apply -f spring-pet-clinic-rest/spring-pet-clinic.yaml -n ${namespace}
+```
