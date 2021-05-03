@@ -209,7 +209,7 @@ data:
   application-oracle.properties: |
     # uncomment for init database (first start)
     #spring.datasource.initialization-mode=always
-    spring.datasource.schema=classpath*:db/oracle/initDB.sql
+    #spring.datasource.schema=classpath*:db/oracle/initDB.sql
     spring.datasource.data=classpath*:db/oracle/populateDB.sql
 
     # PostgreSQL config start
@@ -224,10 +224,10 @@ data:
     #----------------------------------------------------------------
     # PostgreSQL config end
 
-    spring.datasource.url=jdbc:oracle:thin:@oracle-xe:1521/xepdb1
-    spring.datasource.username=pdbadmin
+    spring.datasource.url=jdbc:oracle:thin:@oracle-xe:1521/xe
+    spring.datasource.username=system
     spring.datasource.password=thisisapassword
-    spring.jpa.hibernate.ddl-auto=update
+    spring.jpa.hibernate.ddl-auto=create-drop
     spring.jpa.show-sql=true
     spring.jpa.properties.hibernate.format_sql=true
     spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.Oracle10gDialect
