@@ -1,14 +1,19 @@
 # bdd-demo
 
+this is to be set at the beginning
+
+```shell
+export namespace=poc-dev
+```
+
 #deploy jenkins
 
+```shell
 oc login
-
-oc new-project poc-dev
-
-oc process openshift//jenkins-ephemeral | oc apply -f- -n poc-dev
-
-oc set env dc/jenkins JENKINS_JAVA_OVERRIDES=-Dhudson.model.DirectoryBrowserSupport.CSP='' INSTALL_PLUGINS=ansicolor:0.5.2 -n poc-dev
+oc new-project ${namespace}
+oc process openshift//jenkins-ephemeral | oc apply -f- -n ${namespace}
+oc set env dc/jenkins JENKINS_JAVA_OVERRIDES=-Dhudson.model.DirectoryBrowserSupport.CSP='' INSTALL_PLUGINS=ansicolor:0.5.2 -n ${namespace}
+```
 
 ## The Angular Application
 
@@ -40,3 +45,24 @@ podman run -d -p 4444:4444 -v /dev/shm:/dev/shm selenium/standalone-chrome:4.0.0
 ```
 
 Once you have a selenium instance, you can run `npm run e2e` to execute the end-to-end tests.
+
+
+## running oracle
+
+### build oracle image
+
+run only once
+
+```shell
+oc apply -f ./oracle/build.yaml -n ${namespace}
+```
+
+### deploy oracle
+
+```shell
+oc apply -f ./oracle/statefulset.yaml -n ${namespace}
+```
+
+
+cat Dockerfile.xe | oc new-build https://github.com/oracle/docker-images.git --strategy docker --context-dir ./OracleDatabase/SingleInstance/dockerfiles/18.4.0 --dockerfile - --name oracle-xe
+

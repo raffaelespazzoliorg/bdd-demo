@@ -1,0 +1,81 @@
+kind: StatefulSet
+apiVersion: apps/v1
+metadata:
+  name: oracle-xe
+  labels:
+    app: oracle-xe
+    app.kubernetes.io/component: oracle-xe
+    app.kubernetes.io/instance: oracle-xe
+spec:
+  replicas: 1
+  serviceName: oracle-xe
+  selector:
+    matchLabels:
+      app: oracle-xe
+  volumeClaimTemplates:
+  - metadata:
+      name: oradata
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: 10Gi      
+  template:
+    metadata:
+      labels:
+        app: oracle-xe
+    spec:
+      serviceAccountName: oracle
+      containers:
+        - name: oracle-xe
+          image: >-
+            image-registry.openshift-image-registry.svc:5000/poc-dev/oracle-xe
+          env:
+            - name: ORACLE_PWD
+              value: thisisapassword
+          command:
+            - /bin/bash
+            - -c
+            - chmod -R a+xwr /opt/oracle/oradata && exec $ORACLE_BASE/$RUN_FILE
+          resources: {}
+          volumeMounts:
+            - name: oradata
+              mountPath: /opt/oracle/oradata
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: oracle-xe
+spec:
+  clusterIP: None
+  ports:
+    - name: oracle1
+      protocol: TCP
+      port: 1521
+      targetPort: 1521
+    - name: oracle2
+      protocol: TCP
+      port: 5500
+      targetPort: 5500      
+  selector:
+    app: oracle-xe
+--- 
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: oracle 
+--- 
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: 'poc-dev-oracle-anyuid'
+subjects:
+  - kind: ServiceAccount
+    name: poc-dev
+    namespace: oracle
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: 'system:openshift:scc:anyuid'  
+
