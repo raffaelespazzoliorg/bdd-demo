@@ -60,9 +60,12 @@ oc apply -f ./oracle/build.yaml -n ${namespace}
 ### deploy oracle
 
 ```shell
+oc adm policy add-scc-to-user anyuid -z oracle -n ${namespace}
 oc apply -f ./oracle/statefulset.yaml -n ${namespace}
 ```
 
+## deploying the rest application
 
-cat Dockerfile.xe | oc new-build https://github.com/oracle/docker-images.git --strategy docker --context-dir ./OracleDatabase/SingleInstance/dockerfiles/18.4.0 --dockerfile - --name oracle-xe
-
+```shell
+oc apply -f spring-pet-clinic-rest/spring-pet-clinic.yaml -n ${namespace}
+```

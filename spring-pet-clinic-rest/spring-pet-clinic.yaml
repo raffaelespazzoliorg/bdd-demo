@@ -1,0 +1,234 @@
+apiVersion: v1
+items:
+- apiVersion: image.openshift.io/v1
+  kind: ImageStream
+  metadata:
+    annotations:
+      openshift.io/generated-by: OpenShiftNewApp
+    creationTimestamp: null
+    labels:
+      app: spring-petclinic-rest
+      app.kubernetes.io/component: spring-petclinic-rest
+      app.kubernetes.io/instance: spring-petclinic-rest
+    name: openjdk-11
+  spec:
+    lookupPolicy:
+      local: false
+    tags:
+    - annotations:
+        openshift.io/imported-from: registry.access.redhat.com/ubi8/openjdk-11
+      from:
+        kind: DockerImage
+        name: registry.access.redhat.com/ubi8/openjdk-11
+      generation: null
+      importPolicy: {}
+      name: latest
+      referencePolicy:
+        type: ""
+  status:
+    dockerImageRepository: ""
+- apiVersion: image.openshift.io/v1
+  kind: ImageStream
+  metadata:
+    annotations:
+      openshift.io/generated-by: OpenShiftNewApp
+    creationTimestamp: null
+    labels:
+      app: spring-petclinic-rest
+      app.kubernetes.io/component: spring-petclinic-rest
+      app.kubernetes.io/instance: spring-petclinic-rest
+    name: spring-petclinic-rest
+  spec:
+    lookupPolicy:
+      local: false
+  status:
+    dockerImageRepository: ""
+- apiVersion: build.openshift.io/v1
+  kind: BuildConfig
+  metadata:
+    annotations:
+      openshift.io/generated-by: OpenShiftNewApp
+    creationTimestamp: null
+    labels:
+      app: spring-petclinic-rest
+      app.kubernetes.io/component: spring-petclinic-rest
+      app.kubernetes.io/instance: spring-petclinic-rest
+    name: spring-petclinic-rest
+  spec:
+    nodeSelector: null
+    output:
+      to:
+        kind: ImageStreamTag
+        name: spring-petclinic-rest:latest
+    postCommit: {}
+    resources: {}
+    source:
+      git:
+        uri: https://github.com/raffaelespazzoliorg/spring-petclinic-rest
+      type: Git
+    strategy:
+      sourceStrategy:
+        from:
+          kind: ImageStreamTag
+          name: openjdk-11:latest
+      type: Source
+    triggers:
+    - github:
+        secret: 1ahk8BuATAuZMEK8nEtO
+      type: GitHub
+    - generic:
+        secret: 8bPc41Gcm9eXrB-V5rvg
+      type: Generic
+    - type: ConfigChange
+    - imageChange: {}
+      type: ImageChange
+  status:
+    lastVersion: 0
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    annotations:
+      image.openshift.io/triggers: '[{"from":{"kind":"ImageStreamTag","name":"spring-petclinic-rest:latest"},"fieldPath":"spec.template.spec.containers[?(@.name==\"spring-petclinic-rest\")].image"}]'
+      openshift.io/generated-by: OpenShiftNewApp
+    creationTimestamp: null
+    labels:
+      app: spring-petclinic-rest
+      app.kubernetes.io/component: spring-petclinic-rest
+      app.kubernetes.io/instance: spring-petclinic-rest
+    name: spring-petclinic-rest
+  spec:
+    replicas: 1
+    selector:
+      matchLabels:
+        deployment: spring-petclinic-rest
+    strategy: {}
+    template:
+      metadata:
+        annotations:
+          openshift.io/generated-by: OpenShiftNewApp
+        creationTimestamp: null
+        labels:
+          deployment: spring-petclinic-rest
+      spec:
+        containers:
+        - image: ' '
+          name: spring-petclinic-rest
+          ports:
+          - containerPort: 8080
+            protocol: TCP
+          - containerPort: 8443
+            protocol: TCP
+          - containerPort: 8778
+            protocol: TCP
+          resources: {}
+          env:
+          - name: SPRING_CONFIG_LOCATION
+            value: /etc/spring/application.properties
+          volumeMounts:
+          - name: config
+            mountPath: /etc/spring
+        volumes:
+          - name: config
+            configMap:
+              name: spring-pet-clinic-properties      
+  status: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      openshift.io/generated-by: OpenShiftNewApp
+    creationTimestamp: null
+    labels:
+      app: spring-petclinic-rest
+      app.kubernetes.io/component: spring-petclinic-rest
+      app.kubernetes.io/instance: spring-petclinic-rest
+    name: spring-petclinic-rest
+  spec:
+    ports:
+    - name: 8080-tcp
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+    - name: 8443-tcp
+      port: 8443
+      protocol: TCP
+      targetPort: 8443
+    - name: 8778-tcp
+      port: 8778
+      protocol: TCP
+      targetPort: 8778
+    selector:
+      deployment: spring-petclinic-rest
+  status:
+    loadBalancer: {}
+kind: List
+metadata: {}
+--- 
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: spring-pet-clinic-properties
+data:
+  application.properties: |  
+    # active profiles config
+    #
+    # application use two active profiles
+    #
+    # one - for select database
+    # ------------------------------------------------
+    # When using HSQL, use: hsqldb
+    # When using MySQL, use: mysql
+    # When using PostgeSQL, use: postgresql
+    # ------------------------------------------------
+    #
+    # one for select repository layer
+    # ------------------------------------------------
+    # When using Spring jpa, use: jpa
+    # When using Spring JDBC, use: jdbc
+    # When using Spring Data JPA, use: spring-data-jpa
+    # ------------------------------------------------
+
+    spring.profiles.active=oracle,spring-data-jpa
+
+    # ------------------------------------------------
+
+    server.port=9966
+    server.servlet.context-path=/petclinic/
+
+    spring.messages.basename=messages/messages
+
+    logging.level.org.springframework=INFO
+    #logging.level.org.springframework=DEBUG
+
+    #logging.level.org.hibernate.SQL=DEBUG
+    #logging.level.org.hibernate.type.descriptor.sql.BasicBinder=TRACE
+
+    # enable the desired authentication type
+    # by default the authentication is disabled
+    petclinic.security.enable=false
+  application-oracle.properties: |
+    # uncomment for init database (first start)
+    #spring.datasource.initialization-mode=always
+    spring.datasource.schema=classpath*:db/oracle/initDB.sql
+    spring.datasource.data=classpath*:db/oracle/populateDB.sql
+
+    # PostgreSQL config start
+    #----------------------------------------------------------------
+    # spring.datasource.url=jdbc:postgresql://localhost:5432/petclinic
+    # spring.datasource.username=postgres
+    # spring.datasource.password=petclinic
+    # spring.datasource.driver-class-name=org.postgresql.Driver
+    # spring.jpa.database=POSTGRESQL
+    # spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect
+    # spring.jpa.hibernate.ddl-auto=none
+    #----------------------------------------------------------------
+    # PostgreSQL config end
+
+    spring.datasource.url=jdbc:oracle:thin:@oracle-xe:1521/xepdb1
+    spring.datasource.username=pdbadmin
+    spring.datasource.password=thisisapassword
+    spring.jpa.hibernate.ddl-auto=update
+    spring.jpa.show-sql=true
+    spring.jpa.properties.hibernate.format_sql=true
+    spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.Oracle10gDialect
+    
