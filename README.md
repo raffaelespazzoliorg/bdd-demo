@@ -6,14 +6,10 @@ this is to be set at the beginning
 export namespace=poc-dev
 ```
 
-#deploy jenkins
+#Create Pipeline
 
-```shell
-oc login
-oc new-project ${namespace}
-oc process openshift//jenkins-ephemeral | oc apply -f- -n ${namespace}
-oc set env dc/jenkins JENKINS_JAVA_OVERRIDES=-Dhudson.model.DirectoryBrowserSupport.CSP='' INSTALL_PLUGINS=ansicolor:0.5.2 -n ${namespace}
-```
+Execute the infra-deployment.sh script to deploy Jenkins amd create pipeline(s)
+
 
 ## The Angular Application
 
