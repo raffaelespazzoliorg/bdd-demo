@@ -142,5 +142,19 @@ items:
         deployment: spring-petclinic-angular
     status:
       loadBalancer: {}
+  - apiVersion: route.openshift.io/v1
+    kind: Route
+    metadata:
+      labels:
+        app: spring-petclinic-angular
+      name: spring-petclinic-angular
+    spec:
+      port:
+        targetPort: 8080-tcp
+      to:
+        kind: Service
+        name: spring-petclinic-angular
+        weight: 100
+      wildcardPolicy: None
 kind: List
 metadata: {}
