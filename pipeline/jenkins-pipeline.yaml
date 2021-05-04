@@ -32,15 +32,15 @@ spec:
           }  
 
           stage("service layer") {
-            sh "oc apply -f ./bdd-demo/oracle -n poc-dev"
+            sh "oc apply -f ./bdd-demo/spring-pet-clinic-rest -n poc-dev"
           }
 
           stage("deploy frontend") {
-            sh "oc apply -f ./bdd-demo/oracle -n poc-dev"
+            sh "oc apply -f ./bdd-demo/spring-pet-clinic-angular -n poc-dev"
           }
 
           stage("selenium grid") {
-            sh "oc apply -f ./bdd-demo/oracle -n poc-dev"
+            sh "oc apply -f ./bdd-demo/selenium -n poc-dev"
           }
 
           stage("Run Tests") {
