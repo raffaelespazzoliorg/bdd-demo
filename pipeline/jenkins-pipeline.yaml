@@ -29,9 +29,9 @@ spec:
             
           stage("Deploy Apps") {
           parallel (
-                  'Selenium':  { sh "oc apply -f ./selenium -n poc-dev"},
-                  'Rest':  { sh "oc apply -f ./spring-pet-clinic-rest -n poc-dev"},
-                  'Angular': { sh "oc apply -f ./spring-pet-clinic-angular -n poc-dev"}
+                  'Selenium':  { sh "oc apply -f ./bdd-demo/selenium -n poc-dev"},
+                  'Rest':  { sh "oc apply -f ./bdd-demo/spring-pet-clinic-rest -n poc-dev"},
+                  'Angular': { sh "oc apply -f ./bdd-demo/spring-pet-clinic-angular -n poc-dev"}
             )
           }
 
