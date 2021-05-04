@@ -11,13 +11,13 @@ spec:
       uri: https://github.com/raffaelespazzoliorg/bdd-demo
       ref: main
   triggers:
-  - type: "ConfigChange"
+    - type: "ConfigChange"
   strategy:
     type: "JenkinsPipeline"
     jenkinsPipelineStrategy:
-      jenkinsfile: |-              
+      jenkinsfile: |-
         node("nodejs") {
-        
+
           stage("Checkout") {
             sh "git clone https://github.com/raffaelespazzoliorg/bdd-demo"   
               dir('bbd-demo')
@@ -36,7 +36,7 @@ spec:
           }
 
           stage("deploy frontend") {
-            sh "oc apply -f ./bdd-demo/oracle -n poc-dev"
+            sh "oc apply -f ./bdd-demo/spring-pet-clinic-angular -n poc-dev"
           }
 
           stage("selenium grid") {
