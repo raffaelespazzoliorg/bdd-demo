@@ -8,7 +8,17 @@ export namespace=poc-dev
 
 ## Deploy Jenkins
 
-Execute the infra-deployment.sh script to deploy Jenkins amd create pipeline(s)
+```shell
+oc new-project ${namespace}
+oc process openshift//jenkins-ephemeral | oc apply -f- -n ${namespace}
+oc set env dc/jenkins JENKINS_JAVA_OVERRIDES=-Dhudson.model.DirectoryBrowserSupport.CSP='' INSTALL_PLUGINS=ansicolor:0.5.2 -n ${namespace}
+```
+
+## Deploy pipeline
+
+```shell
+oc apply -f ./pipeline/jenkins-pipeline.yaml -n ${namespace}
+```
 
 ## The Angular Application
 

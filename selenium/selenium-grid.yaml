@@ -1,0 +1,185 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: selenium-hub
+  name: selenium-hub
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: selenium-hub
+  template:
+    metadata:
+      labels:
+        app: selenium-hub
+    spec:
+      containers:
+      - image: selenium/hub:4.0.0-beta-3-20210426
+        name: selenium-hub
+        ports:
+        - containerPort: 4442
+          protocol: TCP
+        - containerPort: 4443
+          protocol: TCP
+        - containerPort: 4444
+          protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: selenium-hub
+  name: selenium-hub
+spec:
+  ports:
+  - name: 4442-tcp
+    port: 4442
+    protocol: TCP
+    targetPort: 4442
+  - name: 4443-tcp
+    port: 4443
+    protocol: TCP
+    targetPort: 4443 
+  - name: 4444-tcp
+    port: 4444
+    protocol: TCP
+    targetPort: 4444            
+  selector:
+    app: selenium-hub
+--- 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: selenium-chrome
+  name: selenium-chrome
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: selenium-chrome
+  template:
+    metadata:
+      labels:
+        app: selenium-chrome
+    spec:
+      containers:
+      - image: selenium/node-chrome:4.0.0-beta-3-20210426
+        name: selenium-chrome
+        ports:
+        - containerPort: 4442
+          protocol: TCP
+        - containerPort: 4443
+          protocol: TCP
+        - containerPort: 4444
+          protocol: TCP
+        env:
+        - name: SE_EVENT_BUS_HOST
+          value: selenium-hub
+        - name: SE_EVENT_BUS_PUBLISH_PORT
+          value: "4442"
+        - name: SE_EVENT_BUS_SUBSCRIBE_PORT
+          value: "4443"
+--- 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: selenium-opera
+  name: selenium-opera
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: selenium-opera
+  template:
+    metadata:
+      labels:
+        app: selenium-opera
+    spec:
+      containers:
+      - image: selenium/node-opera:4.0.0-beta-3-20210426
+        name: selenium-opera
+        ports:
+        - containerPort: 4442
+          protocol: TCP
+        - containerPort: 4443
+          protocol: TCP
+        - containerPort: 4444
+          protocol: TCP
+        env:
+        - name: SE_EVENT_BUS_HOST
+          value: selenium-hub
+        - name: SE_EVENT_BUS_PUBLISH_PORT
+          value: "4442"
+        - name: SE_EVENT_BUS_SUBSCRIBE_PORT
+          value: "4443" 
+--- 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: selenium-firefox
+  name: selenium-firefox
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: selenium-firefox
+  template:
+    metadata:
+      labels:
+        app: selenium-firefox
+    spec:
+      containers:
+      - image: selenium/node-firefox:4.0.0-beta-3-20210426
+        name: selenium-chrome
+        ports:
+        - containerPort: 4442
+          protocol: TCP
+        - containerPort: 4443
+          protocol: TCP
+        - containerPort: 4444
+          protocol: TCP
+        env:
+        - name: SE_EVENT_BUS_HOST
+          value: selenium-hub
+        - name: SE_EVENT_BUS_PUBLISH_PORT
+          value: "4442"
+        - name: SE_EVENT_BUS_SUBSCRIBE_PORT
+          value: "4443" 
+--- 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: selenium-edge
+  name: selenium-edge
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: selenium-edge
+  template:
+    metadata:
+      labels:
+        app: selenium-edge
+    spec:
+      containers:
+      - image: selenium/node-edge:4.0.0-beta-3-20210426
+        name: selenium-edge
+        ports:
+        - containerPort: 4442
+          protocol: TCP
+        - containerPort: 4443
+          protocol: TCP
+        - containerPort: 4444
+          protocol: TCP
+        env:
+        - name: SE_EVENT_BUS_HOST
+          value: selenium-hub
+        - name: SE_EVENT_BUS_PUBLISH_PORT
+          value: "4442"
+        - name: SE_EVENT_BUS_SUBSCRIBE_PORT
+          value: "4443"                               

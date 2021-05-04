@@ -1,0 +1,42 @@
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  labels:
+    application: pet-clinic
+  name: "pet-clinic-pipeline"
+spec:
+  source:
+    type: Git
+    git:
+      uri: https://github.com/raffaelespazzoliorg/bdd-demo
+      ref: main
+  triggers:
+  - type: "ConfigChange"
+  strategy:
+    type: "JenkinsPipeline"
+    jenkinsPipelineStrategy:
+      jenkinsfile: |-              
+        node("nodejs") {
+        
+          stage("Checkout") {
+            sh "git clone https://github.com/raffaelespazzoliorg/bdd-demo"   
+              dir('bbd-demo')
+                {
+                sh "ls -ltr"
+                }
+            
+            }
+            
+          stage("Deploy Apps") {
+          parallel (
+                  'Selenium':  { sh "oc apply -f ./selenium -n poc-dev"},
+                  'Rest':  { sh "oc apply -f ./spring-pet-clinic-rest -n poc-dev"},
+                  'Angular': { sh "oc apply -f ./spring-pet-clinic-angular -n poc-dev"}
+            )
+          }
+
+          stage("Run Tests") {
+            sh "echo run tests here"
+          }
+          
+        }
