@@ -11,13 +11,13 @@ spec:
       uri: https://github.com/raffaelespazzoliorg/bdd-demo
       ref: main
   triggers:
-  - type: "ConfigChange"
+    - type: "ConfigChange"
   strategy:
     type: "JenkinsPipeline"
     jenkinsPipelineStrategy:
-      jenkinsfile: |-              
+      jenkinsfile: |-
         node("nodejs") {
-        
+
           stage("Checkout") {
             sh "git clone https://github.com/raffaelespazzoliorg/bdd-demo"   
               dir('bbd-demo')
