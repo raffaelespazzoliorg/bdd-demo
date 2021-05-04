@@ -1,15 +1,14 @@
 # bdd-demo
 
-this is to be set at the beginning
+This is to be set at the beginning.
 
 ```shell
 export namespace=poc-dev
 ```
 
-#Create Pipeline
+## Deploy Jenkins
 
 Execute the infra-deployment.sh script to deploy Jenkins amd create pipeline(s)
-
 
 ## The Angular Application
 
@@ -47,24 +46,25 @@ To run the E2E tests on your local machine, follow these steps:
    - Linux: `` npm run e2e -- --dev-server-target="" --base-url http://`ip addr | grep 'state UP' -A2 | tail -n1 | awk '{print $2}' | cut -f1 -d'/'`:4200 ``
    - Other: `npm run e2e -- --dev-server-target="" --base-url http://<YOUR_MACHINE_IP_ADDRESS>:4200`
 
-## running oracle
+## Run Oracle Database 18c (XE)
 
-### build oracle image
+### Build Image
 
-run only once
+Run once and wait for build to complete before moving on.
 
 ```shell
 oc apply -f ./oracle/build.yaml -n ${namespace}
 ```
 
-### deploy oracle
+### Deploy Container
 
 ```shell
+oc create serviceaccount oracle -n ${namespace}
 oc adm policy add-scc-to-user anyuid -z oracle -n ${namespace}
 oc apply -f ./oracle/statefulset.yaml -n ${namespace}
 ```
 
-## deploying the rest application
+## Deploy Application
 
 ```shell
 oc apply -f spring-pet-clinic-rest/spring-pet-clinic.yaml -n ${namespace}
