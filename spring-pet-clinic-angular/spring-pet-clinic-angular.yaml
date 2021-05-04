@@ -73,7 +73,7 @@ items:
             name: nginx:1.20.0
           buildArgs:
             - name: REST_API_URL
-              value: "http://spring-petclinic-rest/"
+              value: "http://spring-petclinic-rest:8080/"
         type: Docker
       triggers:
         - github:
