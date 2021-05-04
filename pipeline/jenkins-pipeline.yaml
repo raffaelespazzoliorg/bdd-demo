@@ -19,8 +19,8 @@ spec:
         node("nodejs") {
 
           stage("Checkout") {
-            sh "git clone https://github.com/raffaelespazzoliorg/bdd-demo"   
-              dir('bbd-demo')
+            sh "git clone https://github.com/raffaelespazzoliorg/bdd-demo.git"   
+              dir('bdd-demo')
                 {
                 sh "ls -ltr"
                 }
@@ -40,11 +40,30 @@ spec:
           }
 
           stage("selenium grid") {
-            sh "oc apply -f ./bdd-demo/selenium -n poc-dev"
+            sh "oc apply -f ./bdd-demo/oracle -n poc-dev"
           }
 
-          stage("Run Tests") {
-            sh "echo run tests here"
+          stage("Seed database") {
+          
+            sh "git clone https://github.com/raffaelespazzoliorg/spring-petclinic-rest.git"   
+               dir('spring-petclinic-rest')
+            {
+                sh "flyway -user=system -password=thisisapassword -url="jdbc:oracle:thin:@oracle-xe:1521/xe" -locations="filesystem:./src/main/resources/db/sql" migrate"
+            }
+          }
+
+          stage("Run tests") {
+          
+             sh "git clone https://github.com/raffaelespazzoliorg/spring-petclinic-angular.git"   
+          
+            
+            dir('spring-petclinic-angular')
+            {
+            
+              sh "npm install"
+              sh "SELENIUM_ADDRESS=http://selenium-hub:4444/wd/hub npm run e2e -- --dev-server-target="" --base-url http://spring-petclinic-angular:8080"
+            }
+            
           }
           
         }
