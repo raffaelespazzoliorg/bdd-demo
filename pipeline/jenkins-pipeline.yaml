@@ -26,13 +26,21 @@ spec:
                 }
             
             }
-            
-          stage("Deploy Apps") {
-          parallel (
-                  'Selenium':  { sh "oc apply -f ./bdd-demo/selenium -n poc-dev"},
-                  'Rest':  { sh "oc apply -f ./bdd-demo/spring-pet-clinic-rest -n poc-dev"},
-                  'Angular': { sh "oc apply -f ./bdd-demo/spring-pet-clinic-angular -n poc-dev"}
-            )
+
+          stage("deploy database") {
+            sh "oc apply -f ./bdd-demo/oracle -n poc-dev"
+          }  
+
+          stage("service layer") {
+            sh "oc apply -f ./bdd-demo/oracle -n poc-dev"
+          }
+
+          stage("deploy frontend") {
+            sh "oc apply -f ./bdd-demo/oracle -n poc-dev"
+          }
+
+          stage("selenium grid") {
+            sh "oc apply -f ./bdd-demo/oracle -n poc-dev"
           }
 
           stage("Run Tests") {
