@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  annotations:
+    kompose.cmd: ./kompose convert --controller daemonset --volumes persistentVolumeClaim
+    kompose.version: 1.17.0 (HEAD)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: zookeeper
+  name: zookeeper
+spec:
+  replicas: 1
+  serviceName: zookeeper
+  selector:
+    matchLabels: 
+      io.kompose.service: zookeeper
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        io.kompose.service: zookeeper
+    spec:
+      containers:
+        - image: debezium/zookeeper:1.4
+          name: zookeeper
+          ports:
+            - containerPort: 2181
+            - containerPort: 2888
+            - containerPort: 3888
+          resources: {}
+      restartPolicy: Always
+  updateStrategy: {}
+status:
+  currentNumberScheduled: 0
+  desiredNumberScheduled: 0
+  numberMisscheduled: 0
+  numberReady: 0
