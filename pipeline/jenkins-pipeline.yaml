@@ -31,7 +31,7 @@ spec:
             sh "oc apply -f ./bdd-demo/oracle -n poc-dev"
           }  
 
-          stage("service layer") {
+          stage("deploy service layer") {
             sh "oc apply -f ./bdd-demo/spring-pet-clinic-rest -n poc-dev"
           }
 
@@ -39,20 +39,21 @@ spec:
             sh "oc apply -f ./bdd-demo/spring-pet-clinic-angular -n poc-dev"
           }
 
-          stage("selenium grid") {
+          stage("deploy selenium grid") {
             sh "oc apply -f ./bdd-demo/oracle -n poc-dev"
           }
 
-          stage("Seed database") {
+          stage("seed database") {
           
             sh "git clone https://github.com/raffaelespazzoliorg/spring-petclinic-rest.git"   
                dir('spring-petclinic-rest')
             {
-                sh "flyway -user=system -password=thisisapassword -url="jdbc:oracle:thin:@oracle-xe:1521/xe" -locations="filesystem:./src/main/resources/db/sql" migrate"
+                sh "wget -qO- https://repo1.maven.org/maven2/org/flywaydb/flyway-commandline/7.8.2/flyway-commandline-7.8.2-linux-x64.tar.gz | tar xvz"
+                //sh "./flyway-7.8.2/flyway -user=system -password=thisisapassword -url='jdbc:oracle:thin:@oracle-xe:1521/xe' -locations='filesystem:./src/main/resources/db/sql' migrate"
             }
           }
 
-          stage("Run tests") {
+          stage("run tests") {
           
              sh "git clone https://github.com/raffaelespazzoliorg/spring-petclinic-angular.git"   
           
@@ -61,9 +62,28 @@ spec:
             {
             
               sh "npm install"
-              sh "SELENIUM_ADDRESS=http://selenium-hub:4444/wd/hub npm run e2e -- --dev-server-target="" --base-url http://spring-petclinic-angular:8080"
+              sh "export SELENIUM_ADDRESS=http://selenium-hub:4444/wd/hub"
+              sh "npm run e2e -- --dev-server-target='' --base-url http://spring-petclinic-angular:8080"
             }
             
+          }
+
+          post {
+            always {
+              dir ("spring-petclinic-angular"){
+                script {            
+                  archive (includes: 'cucumber/*')
+                  publishHTML (target: [
+                    allowMissing: false,
+                    alwaysLinkToLastBuild: false,
+                    keepAll: true,
+                    reportDir: 'cucumber/report',
+                    reportFiles: 'index.html',
+                    reportName: "Cucumber Report"
+                  ])
+                }
+              }
+            }
           }
           
         }
