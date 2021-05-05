@@ -57,7 +57,7 @@ spec:
 
           stage("run tests") {
           
-             sh "git clone https://github.com/sdstolworthy/spring-petclinic-angular.git"   
+             sh "git clone https://github.com/raffaelespazzoliorg/spring-petclinic-angular.git"   
           
             
             dir('spring-petclinic-angular')
