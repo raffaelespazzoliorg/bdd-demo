@@ -17,6 +17,8 @@ oc set env dc/jenkins JENKINS_JAVA_OVERRIDES=-Dhudson.model.DirectoryBrowserSupp
 ## Deploy pipeline
 
 ```shell
+oc create serviceaccount oracle -n ${namespace}
+oc adm policy add-scc-to-user anyuid -z oracle -n ${namespace}
 oc apply -f ./pipeline/jenkins-pipeline.yaml -n ${namespace}
 ```
 
@@ -78,4 +80,56 @@ oc apply -f ./oracle/statefulset.yaml -n ${namespace}
 
 ```shell
 oc apply -f spring-pet-clinic-rest/spring-pet-clinic.yaml -n ${namespace}
+```
+
+
+## Streaming demo
+
+Deploy oracle dbs
+
+```shell
+export namespace=streaming-demo
+oc new-project ${namespace}
+```
+
+```shell
+oc adm policy add-scc-to-user anyuid -z default -n ${namespace}
+oc apply -f ./streaming/example -n ${namespace}
+export connect_url=$(oc get route connect -n ${namespace} -o jsonpath='{.spec.host}')
+```
+
+initial situation
+
+```shell
+oc exec -n ${namespace} mysql-0 -- bash -c 'mysql -u $MYSQL_USER  -p$MYSQL_PASSWORD inventory -e "select * from customers"' 
+oc exec -n ${namespace} postgres-0 -- bash -c 'psql -U $POSTGRES_USER $POSTGRES_DB -c "select * from customers"'
+```
+
+activate stream
+
+```shell
+# Start PostgreSQL connector
+curl -i -X POST -H "Accept:application/json" -H  "Content-Type:application/json" http://${connect_url}/connectors/ -d @./streaming/stream/jdbc-sink.json
+
+# Start MySQL connector
+curl -i -X POST -H "Accept:application/json" -H  "Content-Type:application/json" http://${connect_url}/connectors/ -d @./streaming/stream/source.json
+```
+
+check status on target database
+
+```shell
+oc exec -n ${namespace} postgres-0 -- bash -c 'psql -U $POSTGRES_USER $POSTGRES_DB -c "select * from customers"'
+```
+
+insert a record on source database
+
+```shell
+oc exec -ti -n ${namespace} mysql-0 -- bash -c 'mysql -u $MYSQL_USER  -p$MYSQL_PASSWORD inventory'
+insert into customers values(default, 'John', 'Doe', 'john.doe@example.com');
+```
+
+check status on target database
+
+```shell
+oc exec -n ${namespace} postgres-0 -- bash -c 'psql -U $POSTGRES_USER $POSTGRES_DB -c "select * from customers"'
 ```

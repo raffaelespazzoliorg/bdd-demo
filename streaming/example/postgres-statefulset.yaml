@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  annotations:
+    kompose.cmd: ./kompose convert --controller daemonset --volumes persistentVolumeClaim
+    kompose.version: 1.17.0 (HEAD)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: postgres
+  name: postgres
+spec:
+  replicas: 1
+  serviceName: postgres
+  selector:
+    matchLabels: 
+      io.kompose.service: postgres
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        io.kompose.service: postgres
+    spec:
+      containers:
+        - env:
+            - name: POSTGRES_DB
+              value: inventory
+            - name: POSTGRES_PASSWORD
+              value: postgrespw
+            - name: POSTGRES_USER
+              value: postgresuser
+          image: debezium/postgres:9.6
+          name: postgres
+          ports:
+            - containerPort: 5432
+          resources: {}
+      restartPolicy: Always
+  updateStrategy: {}
+status:
+  currentNumberScheduled: 0
+  desiredNumberScheduled: 0
+  numberMisscheduled: 0
+  numberReady: 0
