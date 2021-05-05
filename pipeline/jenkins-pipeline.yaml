@@ -72,12 +72,12 @@ spec:
             always {
               dir ("spring-petclinic-angular"){
                 script {            
-                  archive (includes: 'cucumber/*')
+                  archive (includes: '.tmp/*')
                   publishHTML (target: [
                     allowMissing: false,
                     alwaysLinkToLastBuild: false,
                     keepAll: true,
-                    reportDir: 'cucumber/report',
+                    reportDir: '.tmp/report',
                     reportFiles: 'index.html',
                     reportName: "Cucumber Report"
                   ])
