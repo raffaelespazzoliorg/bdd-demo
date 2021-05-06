@@ -16,76 +16,107 @@ spec:
     type: "JenkinsPipeline"
     jenkinsPipelineStrategy:
       jenkinsfile: |-
-        node("nodejs") {
-
-          stage("Checkout") {
-            sh "node -v"
-            sh "npm -v"
-            sh "git clone https://github.com/raffaelespazzoliorg/bdd-demo.git"   
-              dir('bdd-demo')
-                {
-                sh "ls -ltr"
-                }
-            
-            }
-
-          stage("deploy database") {
-            sh "oc apply -f ./bdd-demo/oracle -n poc-dev"
-          }  
-
-          stage("deploy service layer") {
-            sh "oc apply -f ./bdd-demo/spring-pet-clinic-rest -n poc-dev"
-          }
-
-          stage("deploy frontend") {
-            sh "oc apply -f ./bdd-demo/spring-pet-clinic-angular -n poc-dev"
-          }
-
-          stage("selenium grid") {
-            sh "oc apply -f ./bdd-demo/oracle -n poc-dev"
-          }
-
-          stage("seed database") {
-          
-            sh "git clone https://github.com/raffaelespazzoliorg/spring-petclinic-rest.git"   
-               dir('spring-petclinic-rest')
-            {
-                sh "wget -qO- https://repo1.maven.org/maven2/org/flywaydb/flyway-commandline/7.8.2/flyway-commandline-7.8.2-linux-x64.tar.gz | tar xvz"
-                //sh "./flyway-7.8.2/flyway -user=system -password=thisisapassword -url='jdbc:oracle:thin:@oracle-xe:1521/xe' -locations='filesystem:./src/main/resources/db/sql' migrate"
-            }
-          }
-
-          stage("run tests") {
-          
-             sh "git clone https://github.com/raffaelespazzoliorg/spring-petclinic-angular.git"   
-          
-            
-            dir('spring-petclinic-angular')
-            {
-            
-              sh "npm install"
-              sh "export SELENIUM_ADDRESS=http://selenium-hub:4444/wd/hub"
-              sh "SELENIUM_ADDRESS=http://selenium-hub:4444/wd/hub npm run e2e -- --dev-server-target='' --webdriverUpdate=false --base-url http://spring-petclinic-angular:8080/"
-            }
-            
-          }
-
-          post {
-            always {
-              dir ("spring-petclinic-angular"){
-                script {            
-                  archive (includes: '.tmp/*')
-                  publishHTML (target: [
-                    allowMissing: false,
-                    alwaysLinkToLastBuild: false,
-                    keepAll: true,
-                    reportDir: '.tmp/report',
-                    reportFiles: 'index.html',
-                    reportName: "Cucumber Report"
-                  ])
-                }
+        pipeline {
+          agent {
+            kubernetes {
+              label "jenkins"
+              cloud 'openshift'
+              serviceAccount 'jenkins'
+              containerTemplate {
+                name 'jnlp'
+                image "image-registry.openshift-image-registry.svc:5000/openshift/jenkins-agent-nodejs"
+                alwaysPullImage true
+                workingDir '/tmp'
+                args '${computer.jnlpmac} ${computer.name}'
+                ttyEnabled false
               }
             }
           }
-          
+          stages{
+            stage("Checkout") {
+              steps {
+              sh "node -v"
+              sh "npm -v"
+              sh "git clone https://github.com/raffaelespazzoliorg/bdd-demo.git"    
+              }
+            }
+
+            stage("deploy database") {
+              steps {
+                sh "oc apply -f ./bdd-demo/oracle -n poc-dev"
+              }
+            }  
+
+            stage("deploy service layer") {
+              steps{
+                sh "oc apply -f ./bdd-demo/spring-pet-clinic-rest -n poc-dev"
+              }
+            }
+
+            stage("deploy frontend") {
+              steps {
+                sh "oc apply -f ./bdd-demo/spring-pet-clinic-angular -n poc-dev"
+              }
+            }
+
+            stage("selenium grid") {
+              steps{
+                sh "oc apply -f ./bdd-demo/oracle -n poc-dev"
+              }
+            }
+
+            stage("seed database") {
+              steps{
+                sh "git clone https://github.com/raffaelespazzoliorg/spring-petclinic-rest.git"   
+                dir('spring-petclinic-rest')
+                {
+                  sh "wget -qO- https://repo1.maven.org/maven2/org/flywaydb/flyway-commandline/7.8.2/flyway-commandline-7.8.2-linux-x64.tar.gz | tar xvz"
+                  //sh "./flyway-7.8.2/flyway -user=system -password=thisisapassword -url='jdbc:oracle:thin:@oracle-xe:1521/xe' -locations='filesystem:./src/main/resources/db/sql' migrate"
+                }
+              }
+            }
+
+            stage("run tests") {
+              steps{
+              sh "git clone https://github.com/raffaelespazzoliorg/spring-petclinic-angular.git"   
+                dir('spring-petclinic-angular')
+                {
+                  sh "npm install"
+                  sh "export SELENIUM_ADDRESS=http://selenium-hub:4444/wd/hub"
+                  sh "SELENIUM_ADDRESS=http://selenium-hub:4444/wd/hub npm run e2e -- --dev-server-target='' --webdriverUpdate=false --base-url http://spring-petclinic-angular:8080/ || true"
+                  sh "ls -haR .tmp"
+                }
+              }
+              post {
+                always {
+                  dir ("spring-petclinic-angular"){
+                    script {            
+                      archive (includes: '.tmp/*')
+                      publishHTML (target: [
+                        allowMissing: false,
+                        alwaysLinkToLastBuild: false,
+                        keepAll: true,
+                        reportDir: '.tmp/report',
+                        reportFiles: 'index.html',
+                        reportName: "Cucumber Report"
+                      ])
+                    }
+                  }
+                  cucumber buildStatus: 'UNSTABLE',
+                    failedFeaturesNumber: 1,
+                    failedScenariosNumber: 1,
+                    skippedStepsNumber: 1,
+                    failedStepsNumber: 1,
+                    classifications: [
+                            [key: 'Commit', value: '<a href="${GERRIT_CHANGE_URL}">${GERRIT_PATCHSET_REVISION}</a>'],
+                            [key: 'Submitter', value: '${GERRIT_PATCHSET_UPLOADER_NAME}']
+                    ],
+                    reportTitle: 'My report',
+                    fileIncludePattern: '**/*result.json',
+                    sortingMethod: 'ALPHABETICAL',
+                    trendsLimit: 100
+                }
+              }              
+            }
+          }           
         }
