@@ -42,7 +42,7 @@ spec:
           }
 
           stage("selenium grid") {
-            sh "oc apply -f ./bdd-demo/oracle -n poc-dev"
+            sh "oc apply -f ./bdd-demo/selenium -n poc-dev"
           }
 
           stage("seed database") {
