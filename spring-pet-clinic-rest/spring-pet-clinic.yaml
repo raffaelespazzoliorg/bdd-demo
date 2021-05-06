@@ -4,6 +4,7 @@ items:
   kind: ImageStream
   metadata:
     annotations:
+      app.openshift.io/connects-to: '[{"apiVersion":"apps/v1","kind":"StatefulSet","name":"oracle-xe"}]'
       openshift.io/generated-by: OpenShiftNewApp
     creationTimestamp: null
     labels:
