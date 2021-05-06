@@ -14,6 +14,11 @@ oc process openshift//jenkins-ephemeral | oc apply -f- -n ${namespace}
 oc set env dc/jenkins JENKINS_JAVA_OVERRIDES=-Dhudson.model.DirectoryBrowserSupport.CSP='' INSTALL_PLUGINS=ansicolor:0.5.2 -n ${namespace}
 ```
 
+at this point you need to manually install the cucumber report plugin (strangely this cannot be automated).
+manage jenkins-> go to plugin manager -> available -> search for cucumber -> pick "cucumber reports" (should be the first) -> install without restart
+
+see also [cucumber report](https://plugins.jenkins.io/cucumber-reports/)
+
 ## Deploy pipeline
 
 ```shell
