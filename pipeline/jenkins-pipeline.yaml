@@ -46,7 +46,6 @@ spec:
                 sh "oc apply -f ./bdd-demo/oracle -n poc-dev"
               }
             }  
-
             stage("deploy service layer") {
               steps{
                 sh "oc apply -f ./bdd-demo/spring-pet-clinic-rest -n poc-dev"
@@ -61,7 +60,7 @@ spec:
 
             stage("selenium grid") {
               steps{
-                sh "oc apply -f ./bdd-demo/oracle -n poc-dev"
+                sh "oc apply -f ./bdd-demo/selenium -n poc-dev"
               }
             }
 
