@@ -88,14 +88,20 @@ oc apply -f spring-pet-clinic-rest/spring-pet-clinic.yaml -n ${namespace}
 ```
 
 
-## Streaming demo
+## Streaming Demo
 
-Deploy oracle dbs
+### Setup
+
+Deploy Oracle database (see *Run Oracle Database 18c (XE)* above)
+
+Create namespace
 
 ```shell
 export namespace=streaming-demo
 oc new-project ${namespace}
 ```
+
+Deploy demo applications
 
 ```shell
 oc adm policy add-scc-to-user anyuid -z default -n ${namespace}
@@ -103,37 +109,61 @@ oc apply -f ./streaming/example -n ${namespace}
 export connect_url=$(oc get route connect -n ${namespace} -o jsonpath='{.spec.host}')
 ```
 
-initial situation
+Wait for `debezium-jdbc-es` build to complete
+
+Download JDBC driver `ojdbc8-full.tar.gz` from https://www.oracle.com/database/technologies/appdev/jdbc-ucp-183-downloads.html
+and extract the tarball to `streaming/oracle`. This should create the folder `./streaming/oracle/ojdbc8-full`.
+
+Build Oracle connector and patch `connect` StatefulSet
 
 ```shell
-oc exec -n ${namespace} mysql-0 -- bash -c 'mysql -u $MYSQL_USER  -p$MYSQL_PASSWORD inventory -e "select * from customers"' 
+oc apply -f ./streaming/oracle/debezium-jdbc-oracle-build.yaml -n ${namespace}
+oc start-build debezium-jdbc-oracle --from-dir=./streaming/oracle/ --follow --wait
+oc patch statefulset connect --type='json' -p='[{"op": "replace", "path": "/spec/template/spec/containers/0/image", "value":"debezium-jdbc-oracle:latest"}]'
+```
+
+### Stream Data Updates
+
+Initial situation
+
+```shell
+oc exec -n ${namespace} mysql-0 -- bash -c 'mysql -u $MYSQL_USER  -p$MYSQL_PASSWORD inventory -e "select * from customers"'
 oc exec -n ${namespace} postgres-0 -- bash -c 'psql -U $POSTGRES_USER $POSTGRES_DB -c "select * from customers"'
 ```
 
-activate stream
+Activate streams
 
 ```shell
 # Start PostgreSQL connector
 curl -i -X POST -H "Accept:application/json" -H  "Content-Type:application/json" http://${connect_url}/connectors/ -d @./streaming/stream/jdbc-sink.json
 
+# Start Oracle connector
+curl -i -X POST -H "Accept:application/json" -H  "Content-Type:application/json" http://${connect_url}/connectors/ -d @./streaming/stream/oracle-sink.json
+
 # Start MySQL connector
 curl -i -X POST -H "Accept:application/json" -H  "Content-Type:application/json" http://${connect_url}/connectors/ -d @./streaming/stream/source.json
 ```
 
-check status on target database
+List streams
+
+```shell
+curl -i http://${connect_url}/connectors/
+```
+
+Check status on target database
 
 ```shell
 oc exec -n ${namespace} postgres-0 -- bash -c 'psql -U $POSTGRES_USER $POSTGRES_DB -c "select * from customers"'
 ```
 
-insert a record on source database
+Insert a record on source database
 
 ```shell
 oc exec -ti -n ${namespace} mysql-0 -- bash -c 'mysql -u $MYSQL_USER  -p$MYSQL_PASSWORD inventory'
 insert into customers values(default, 'John', 'Doe', 'john.doe@example.com');
 ```
 
-check status on target database
+Check status on target database
 
 ```shell
 oc exec -n ${namespace} postgres-0 -- bash -c 'psql -U $POSTGRES_USER $POSTGRES_DB -c "select * from customers"'

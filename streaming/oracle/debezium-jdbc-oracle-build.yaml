@@ -1,0 +1,45 @@
+---
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  creationTimestamp: null
+  labels:
+    build: debezium-jdbc-oracle
+  name: debezium-jdbc-oracle
+spec:
+  lookupPolicy:
+    local: false
+status:
+  dockerImageRepository: ""
+---
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  labels:
+    build: debezium-jdbc-oracle
+  name: debezium-jdbc-oracle
+spec:
+  nodeSelector: null
+  output:
+    to:
+      kind: ImageStreamTag
+      name: debezium-jdbc-oracle:latest
+  postCommit: {}
+  resources: {}
+  source:
+    type: binary
+    binary: {}
+  strategy:
+    dockerStrategy:
+      from:
+        kind: ImageStreamTag
+        name: debezium-jdbc-es:latest
+    type: Docker
+  triggers:
+  - generic:
+      secret: pLxLIniLJqBlbnzu0uVF
+    type: Generic
+  - type: ConfigChange
+  - imageChange: {}
+    type: ImageChange
+...
