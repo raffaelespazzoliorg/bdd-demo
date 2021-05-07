@@ -1,3 +1,4 @@
+---
 kind: BuildConfig
 apiVersion: build.openshift.io/v1
 metadata:
@@ -19,16 +20,13 @@ spec:
       from:
         kind: ImageStreamTag
         name: 'oraclelinux:7-slim'
+      dockerfilePath: Dockerfile.xe
   postCommit: {}
   source:
     type: Git
     git:
       uri: 'https://github.com/oracle/docker-images.git'
     contextDir: OracleDatabase/SingleInstance/dockerfiles/18.4.0
-  strategy:
-    dockerStrategy:
-      dockerfilePath: Dockerfile.xe
-    type: Docker
   triggers:
     - type: GitHub
       github:
@@ -73,3 +71,4 @@ spec:
       importPolicy: {}
       referencePolicy:
         type: Source
+...
