@@ -4,6 +4,7 @@ metadata:
   annotations:
     kompose.cmd: ./kompose convert --controller daemonset --volumes persistentVolumeClaim
     kompose.version: 1.17.0 (HEAD)
+    app.openshift.io/connects-to: '[{"apiVersion":"apps/v1","kind":"StatefulSet","name":"connect"}]'
   creationTimestamp: null
   labels:
     io.kompose.service: mysql
@@ -12,7 +13,7 @@ spec:
   replicas: 1
   serviceName: mysql
   selector:
-    matchLabels: 
+    matchLabels:
       io.kompose.service: mysql
   template:
     metadata:

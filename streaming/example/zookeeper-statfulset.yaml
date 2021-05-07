@@ -7,12 +7,13 @@ metadata:
   creationTimestamp: null
   labels:
     io.kompose.service: zookeeper
+    app.kubernetes.io/part-of: kafka
   name: zookeeper
 spec:
   replicas: 1
   serviceName: zookeeper
   selector:
-    matchLabels: 
+    matchLabels:
       io.kompose.service: zookeeper
   template:
     metadata:
