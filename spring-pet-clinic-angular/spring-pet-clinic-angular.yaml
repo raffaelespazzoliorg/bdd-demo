@@ -100,6 +100,7 @@ items:
         app: spring-petclinic-angular
         app.kubernetes.io/component: spring-petclinic-angular
         app.kubernetes.io/instance: spring-petclinic-angular
+        app.kubernetes.io/part-of: app
       name: spring-petclinic-angular
     spec:
       replicas: 1

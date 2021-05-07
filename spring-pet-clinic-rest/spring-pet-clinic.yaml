@@ -97,6 +97,7 @@ items:
       app: spring-petclinic-rest
       app.kubernetes.io/component: spring-petclinic-rest
       app.kubernetes.io/instance: spring-petclinic-rest
+      app.kubernetes.io/part-of: app
     name: spring-petclinic-rest
   spec:
     replicas: 1
