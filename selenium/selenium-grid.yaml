@@ -13,6 +13,7 @@ spec:
     metadata:
       labels:
         app: selenium-hub
+	app.kubernetes.io/part-of: selenium
     spec:
       containers:
       - image: selenium/hub:4.0.0-beta-3-20210426
