@@ -6,6 +6,7 @@ metadata:
     app: oracle-xe
     app.kubernetes.io/component: oracle-xe
     app.kubernetes.io/instance: oracle-xe
+    app.kubernetes.io/part-of: app
 spec:
   replicas: 1
   serviceName: oracle-xe
